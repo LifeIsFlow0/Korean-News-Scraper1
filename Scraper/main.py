@@ -5,7 +5,6 @@ import requests
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import pandas as pd
-from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
 
@@ -219,7 +218,7 @@ for i in range(1,len(pagelist) + 1):
     driver.implicitly_wait(2)
     driver.get(url)'''
 
-#def news()
+#신문사 별 카테고리
 JAlist = ['politics', 'money', 'society', 'sports',
           'culture', 'lifestyle', 'world', 'people']
 HKlist = ['News/Politics', 'News/Economy', 'News/Society', 'Sports',
@@ -229,6 +228,7 @@ AJlist = ['politics', 'economy', 'society', 'cultureentertainment/sports',
 DAILIlist = ['politics', 'economy', 'society', 'sports',
              'lifeCulture', 'entertainment', 'world', 'itScience']
 
+#신문사 별 Dataframe으로 만들 리스트 선언
 dfJANewsList = []
 dfJA_LDList = []
 dfHKNewsList = []
@@ -238,6 +238,7 @@ dfAJ_LDList = []
 dfDAILINewsList = []
 dfDAILI_LDList = []
 
+idNews = 0
 for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
     html = urlopen("https://www.joongang.co.kr/" + category)  # 중앙일보에서 해당 카테고리 url
     bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
@@ -264,7 +265,7 @@ for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
 
             # -----------------------------------------------------------------------------
             # csv 로 데이터 저장하기 위한 리스트
-            dfJANewsList.append([title, author, publish_date, article_html, text, category, 'joongang'])
+            dfJANewsList.append([idNews, title, author, publish_date, article_html, text, category, 'joongang'])
 
             # 데이터가 잘 저장되었는지 확인
             '''print(article_html)
@@ -291,19 +292,26 @@ for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
 
             # --------------------------------------------------------------------
             # 호불호 데이터 csv 로 저장
-            dfJA_LDList.append([LDlist[0], LDlist[1]])
+            dfJA_LDList.append([idNews, LDlist[0], LDlist[1]])
 
             # 호불호 데이터가 잘 저장이 되었는지 확인
             #print(LDlist)
 
+            # News 총 개수 저장
+            idNews += 1
+
+#---------------------------------------------------------------------------------
+#뉴스, 호불호 Dataframe 만들기
 df_JANews = pd.DataFrame(dfJANewsList,
-                         columns = ['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
-df_JALD = pd.DataFrame(dfJA_LDList, columns = ['Likes', 'Dislikes'])
+                         columns = ['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+df_JALD = pd.DataFrame(dfJA_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
+
+#Dataframe 확인
 print(df_JANews)
 print(df_JALD)
 
-'''for category in HKlist:  # 중앙일보 카테고리를 하나씩 대입
-    html = urlopen("https://www.hankookilbo.com/" + category)  # 중앙일보에서 해당 카테고리 url
+'''for category in HKlist:  # 한국일보 카테고리를 하나씩 대입
+    html = urlopen("https://www.hankookilbo.com/" + category)  # 한국일보에서 해당 카테고리 url
     bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
     news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
     count = 0  # 카테고리 당 가져오는 기사 개수 카운트
@@ -360,15 +368,19 @@ print(df_JALD)
             # 호불호 데이터가 잘 저장이 되었는지 확인
             # print(LDlist)
 
+#--------------------------------------------------------------------------------
+#뉴스, 호불호 Dataframe 만들기
 df_HKNews = pd.DataFrame(dfHKNewsList,
                            columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
 #df_HKLD = pd.DataFrame(dfHK_LDList, columns = ['Likes', 'Dislikes'])
+
+#Dataframe 확인
 print(df_HKNews)
 #print(df_HKLD)'''
 
 for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
     for j in range(1, 7):
-        html = urlopen("https://www.ajunews.com/" + category + "?page=" + str(j) + "&")  # 중앙일보에서 해당 카테고리 url
+        html = urlopen("https://www.ajunews.com/" + category + "?page=" + str(j) + "&")  # 아주경제에서 해당 카테고리 url
         bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
         news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
         count = 0  # 카테고리 당 가져오는 기사 개수 카운트
@@ -387,20 +399,20 @@ for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
 
                 article_html = a.article_html  # 기사 본문 html 코드 (기사 템플릿 html 파일에 넣을 코드?)
                 title = a.title  # 기사 제목
-                author = a.authors  # 기사를 작성한 기자
+                author = ''  # 기사를 작성한 기자
                 publish_date = a.publish_date  # 기사를 처음 업로드한 시간
                 text = a.text  # 기사 본문 텍스트 정보만 (키워드 분석 전용 데이터)
 
                 # -----------------------------------------------------------------------------
                 # csv 로 데이터 저장
-                dfAJNewsList.append([title, author, str(publish_date), article_html, text, category, 'ajunews'])
+                dfAJNewsList.append([idNews, title, author, str(publish_date), article_html, text, category, 'ajunews'])
 
                 # 데이터가 잘 저장되었는지 확인
                 '''print(article_html)
                 print('-------------------------------------------------------')
-                print(title)
-                print(author)
-                print(publish_date)
+                print(title)'''
+                #print(author)
+                '''print(publish_date)
                 print(text)'''
 
                 # --------------------------------------------------------------
@@ -420,22 +432,27 @@ for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
 
                 # --------------------------------------------------------------------
                 # 호불호 데이터 csv 로 저장
-                dfAJ_LDList.append([LDlist[0], LDlist[1]])
+                dfAJ_LDList.append([idNews, LDlist[0], LDlist[1]])
 
                 # 호불호 데이터가 잘 저장이 되었는지 확인
                 # print(LDlist)
 
+                #News 총 개수 저장
+                idNews += 1
+#-------------------------------------------------------------------------------------
+#뉴스, 호불호 Dataframe 만들기
 df_AJNews = pd.DataFrame(dfAJNewsList,
-                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
-df_AJLD = pd.DataFrame(dfAJ_LDList, columns = ['Likes', 'Dislikes'])
+                           columns=['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+df_AJLD = pd.DataFrame(dfAJ_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
 
+#Dataframe 상태 확인
 print(df_AJNews)
 print(df_AJLD)
 
 
-for category in DAILIlist:  # 중앙일보 카테고리를 하나씩 대입
+for category in DAILIlist:  # 데일리안 카테고리를 하나씩 대입
     for j in range(1, 6):
-        html = urlopen("https://www.dailian.co.kr/" + category + "?page=" + str(j))  # 중앙일보에서 해당 카테고리 url
+        html = urlopen("https://www.dailian.co.kr/" + category + "?page=" + str(j))  # 데일리안에서 해당 카테고리 url
         bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
         news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
         count = 0  # 카테고리 당 가져오는 기사 개수 카운트
@@ -454,21 +471,21 @@ for category in DAILIlist:  # 중앙일보 카테고리를 하나씩 대입
 
                 article_html = a.article_html  # 기사 본문 html 코드 (기사 템플릿 html 파일에 넣을 코드?)
                 title = a.title  # 기사 제목
-                author = a.authors  # 기사를 작성한 기자
+                author = ''  # 기사를 작성한 기자
                 publish_date = a.publish_date  # 기사를 처음 업로드한 시간
                 text = a.text  # 기사 본문 텍스트 정보만 (키워드 분석 전용 데이터)
 
                 # -----------------------------------------------------------------------------
                 # csv 로 데이터 저장
-                dfDAILINewsList.append([title, author, str(publish_date), article_html, text, category, 'dailian'])
+                dfDAILINewsList.append([idNews, title, author, str(publish_date), article_html, text, category, 'dailian'])
 
                 # 데이터가 잘 저장되었는지 확인
-                print(article_html)
+                '''print(article_html)
                 print('-------------------------------------------------------')
                 print(title)
                 print(author)
                 print(publish_date)
-                print(text)
+                print(text)'''
 
                 # --------------------------------------------------------------
                 # 여기부터 호불호 데이터
@@ -488,15 +505,33 @@ for category in DAILIlist:  # 중앙일보 카테고리를 하나씩 대입
                 LD_dislike = bsObject_LD.find('span', {"id" : "news_hates"}).text
                 #print([LD_like, LD_dislike])
                 # --------------------------------------------------------------------
+
                 # 호불호 데이터 csv 로 저장
-                dfDAILI_LDList.append([LD_like, LD_dislike])
+                dfDAILI_LDList.append([idNews, LD_like, LD_dislike])
 
                 # 호불호 데이터가 잘 저장이 되었는지 확인
                 # print(LDlist)
 
+                #News 총 개수 저장
+                idNews += 1
+#-------------------------------------------------------------------------------------
+#뉴스, 호불호 Dataframe 만들기
 df_DAILINews = pd.DataFrame(dfDAILINewsList,
-                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
-df_DAILILD = pd.DataFrame(dfDAILI_LDList, columns = ['Likes', 'Dislikes'])
+                           columns=['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+df_DAILILD = pd.DataFrame(dfDAILI_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
 
+#Dataframe 상태 확인
 print(df_DAILINews)
 print(df_DAILILD)
+
+#Dataframe 합치기
+df_News = pd.merge(df_JANews, df_AJNews).merge(df_DAILINews)
+df_LD = pd.merge(df_JALD, df_AJLD).merge(df_DAILILD)
+
+#합친 Dataframe 확인
+print(df_News)
+print(df_LD)
+
+#Dataframe csv로 저장
+df_News.to_csv('News.csv', mode='w', encoding='utf-8')
+df_LD.to_csv('LikeDislike.csv', mode='w', encoding='utf-8')
