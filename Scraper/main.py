@@ -170,7 +170,7 @@ while True:
 html = driver.page_source
 soup = BeautifulSoup(html, 'html.parser')
 comment = soup.find_all('span', {"class": "u_cbox_contents"})'''
-
+'''
 url = "https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=469"
 
 html = urlopen(url)  # 중앙일보에서 해당 카테고리 url
@@ -214,18 +214,289 @@ for i in range(1,len(pagelist) + 1):
             if news0 != line['alt']:  # 앞서 가져온 기사와 같은지 확인
                 news0 = line['alt']
                 print(news0)
-    '''driver = webdriver.Chrome(ChromeDriverManager().install())
+
+    driver = webdriver.Chrome(ChromeDriverManager().install())
     driver.implicitly_wait(2)
     driver.get(url)'''
 
+#def news()
+JAlist = ['politics', 'money', 'society', 'sports',
+          'culture', 'lifestyle', 'world', 'people']
+HKlist = ['News/Politics', 'News/Economy', 'News/Society', 'Sports',
+          'News/Culture', 'News/Enter', 'News/World', 'News/People', 'News/Life', 'News/Local']
+AJlist = ['politics', 'economy', 'society', 'cultureentertainment/sports',
+          'cultureentertainment/culture', 'cultureentertainment/entertainment']
+DAILIlist = ['politics', 'economy', 'society', 'sports',
+             'lifeCulture', 'entertainment', 'world', 'itScience']
 
-    '''while True:
-        try:
-            더보기 = driver.find_element_by(By.XPATH, '//*[@id="main_content"]/div[3]/a[2]')
-            더보기.click()
-            time.sleep(1)
-        except:
-            break
+dfJANewsList = []
+dfJA_LDList = []
+dfHKNewsList = []
+dfHK_LDList = []
+dfAJNewsList = []
+dfAJ_LDList = []
+dfDAILINewsList = []
+dfDAILI_LDList = []
 
-    html = driver.page_source
-    bsObject = BeautifulSoup(html, 'html.parser')'''
+for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
+    html = urlopen("https://www.joongang.co.kr/" + category)  # 중앙일보에서 해당 카테고리 url
+    bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
+    news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
+    count = 0  # 카테고리 당 가져오는 기사 개수 카운트
+
+    for link in bsObject.find("ul", {"class": "story_list"}).find_all('a'):  # 카테고리 별 기사 url 가져오기
+        newsNew = link.get('href')  # 개별 기사 url 저장됨
+
+        if news0 != newsNew:  # 앞서 가져온 기사와 같은지 확인
+            news0 = newsNew  # 다른 기사이므로 news0을 새로운 기사 url로 갱신
+
+            a = Article(news0, keep_article_html=True, language='ko')  # newspaper3k 라이브러리 전용 html 로드
+
+            # newspaper3k 라이브러리 전용~~~
+            a.download()
+            a.parse()
+
+            article_html = a.article_html  # 기사 본문 html 코드 (기사 템플릿 html 파일에 넣을 코드?)
+            title = a.title  # 기사 제목
+            author = a.authors[0]  # 기사를 작성한 기자
+            publish_date = a.publish_date  # 기사를 처음 업로드한 시간
+            text = a.text  # 기사 본문 텍스트 정보만 (키워드 분석 전용 데이터)
+
+            # -----------------------------------------------------------------------------
+            # csv 로 데이터 저장하기 위한 리스트
+            dfJANewsList.append([title, author, publish_date, article_html, text, category, 'joongang'])
+
+            # 데이터가 잘 저장되었는지 확인
+            '''print(article_html)
+            print('-------------------------------------------------------')
+            print(title)
+            print(author)
+            print(publish_date)
+            print(text)'''
+
+            # --------------------------------------------------------------
+            # 여기부터 호불호 데이터
+            html_LD = urlopen(news0)  # 호불호 데이터 스크래핑을 위한 개별 뉴스 url 로드 (bs4 라이브러리 전용)
+            bsObject_LD = BeautifulSoup(html_LD, "html.parser")  # bs4 라이브러리 전용 기사 전문 html 가져오기
+
+            LDlist = []  # 호불호 데이터 저장을 위한 리스트
+
+            # -------------------------------------------------------------------
+            LD = bsObject_LD.find('div', {"class": "empathy_wrap"}).find_all('span', {"class": "count"})
+            #print(LD)
+
+            # 리스트 LD에 호불호 데이터 저장
+            for i in LD:
+                LDlist.append(i.text)
+
+            # --------------------------------------------------------------------
+            # 호불호 데이터 csv 로 저장
+            dfJA_LDList.append([LDlist[0], LDlist[1]])
+
+            # 호불호 데이터가 잘 저장이 되었는지 확인
+            #print(LDlist)
+
+df_JANews = pd.DataFrame(dfJANewsList,
+                         columns = ['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+df_JALD = pd.DataFrame(dfJA_LDList, columns = ['Likes', 'Dislikes'])
+print(df_JANews)
+print(df_JALD)
+
+'''for category in HKlist:  # 중앙일보 카테고리를 하나씩 대입
+    html = urlopen("https://www.hankookilbo.com/" + category)  # 중앙일보에서 해당 카테고리 url
+    bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
+    news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
+    count = 0  # 카테고리 당 가져오는 기사 개수 카운트
+
+    for link in bsObject.find("ul", {"id" : "section-bottom-article-list"}).find_all('a'):  # 카테고리 별 기사 url 가져오기
+        newsNew = link.get('href')  # 개별 기사 url 저장됨
+        #print(newsNew)
+        if news0 != newsNew:  # 앞서 가져온 기사와 같은지 확인
+            news0 = newsNew  # 다른 기사이므로 news0을 새로운 기사 url로 갱신
+
+            a = Article("https://www.hankookilbo.com" + news0, keep_article_html=True, language='ko')  # newspaper3k 라이브러리 전용 html 로드
+
+            # newspaper3k 라이브러리 전용~~~
+            a.download()
+            a.parse()
+
+            article_html = a.article_html  # 기사 본문 html 코드 (기사 템플릿 html 파일에 넣을 코드?)
+            title = a.title  # 기사 제목
+            author = a.authors  # 기사를 작성한 기자
+            publish_date = a.publish_date  # 기사를 처음 업로드한 시간
+            text = a.text  # 기사 본문 텍스트 정보만 (키워드 분석 전용 데이터)
+
+            # -----------------------------------------------------------------------------
+            # csv 로 데이터 저장
+            dfHKNewsList.append([title, author, str(publish_date), article_html, text, category, 'hankook'])
+
+            # 데이터가 잘 저장되었는지 확인
+            print(article_html)
+            print('-------------------------------------------------------')
+            print(title)
+            print(author)
+            print(publish_date)
+            print(text)
+            
+            # --------------------------------------------------------------
+            # 여기부터 호불호 데이터
+            html_LD = urlopen("https://www.hankookilbo.com" + news0)  # 호불호 데이터 스크래핑을 위한 개별 뉴스 url 로드 (bs4 라이브러리 전용)
+            bsObject_LD = BeautifulSoup(html_LD, "html.parser")  # bs4 라이브러리 전용 기사 전문 html 가져오기
+
+            LDlist = []  # 호불호 데이터 저장을 위한 리스트
+
+            # -------------------------------------------------------------------
+            LD = bsObject_LD.find('div', {"class": "empathy_wrap"}).find_all('span', {"class": "count"})
+            # print(LD)
+
+            # 리스트 LD에 호불호 데이터 저장
+            for i in LD:
+                LDlist.append(i.text)
+
+            # --------------------------------------------------------------------
+            # 호불호 데이터 csv 로 저장
+            dfJA_LDList.append([LDlist[0], LDlist[1]])
+
+            # 호불호 데이터가 잘 저장이 되었는지 확인
+            # print(LDlist)
+
+df_HKNews = pd.DataFrame(dfHKNewsList,
+                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+#df_HKLD = pd.DataFrame(dfHK_LDList, columns = ['Likes', 'Dislikes'])
+print(df_HKNews)
+#print(df_HKLD)'''
+
+for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
+    for j in range(1, 7):
+        html = urlopen("https://www.ajunews.com/" + category + "?page=" + str(j) + "&")  # 중앙일보에서 해당 카테고리 url
+        bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
+        news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
+        count = 0  # 카테고리 당 가져오는 기사 개수 카운트
+
+        for link in bsObject.find("ul", {"class" : "news_list"}).find_all('a'):  # 카테고리 별 기사 url 가져오기
+            newsNew = link.get('href')  # 개별 기사 url 저장됨
+            #print(newsNew)
+            if news0 != newsNew:  # 앞서 가져온 기사와 같은지 확인
+                news0 = newsNew  # 다른 기사이므로 news0을 새로운 기사 url로 갱신
+
+                a = Article("https:" + news0, keep_article_html=True, language='ko')  # newspaper3k 라이브러리 전용 html 로드
+
+                # newspaper3k 라이브러리 전용~~~
+                a.download()
+                a.parse()
+
+                article_html = a.article_html  # 기사 본문 html 코드 (기사 템플릿 html 파일에 넣을 코드?)
+                title = a.title  # 기사 제목
+                author = a.authors  # 기사를 작성한 기자
+                publish_date = a.publish_date  # 기사를 처음 업로드한 시간
+                text = a.text  # 기사 본문 텍스트 정보만 (키워드 분석 전용 데이터)
+
+                # -----------------------------------------------------------------------------
+                # csv 로 데이터 저장
+                dfAJNewsList.append([title, author, str(publish_date), article_html, text, category, 'ajunews'])
+
+                # 데이터가 잘 저장되었는지 확인
+                '''print(article_html)
+                print('-------------------------------------------------------')
+                print(title)
+                print(author)
+                print(publish_date)
+                print(text)'''
+
+                # --------------------------------------------------------------
+                # 여기부터 호불호 데이터
+                html_LD = urlopen("https:" + news0)  # 호불호 데이터 스크래핑을 위한 개별 뉴스 url 로드 (bs4 라이브러리 전용)
+                bsObject_LD = BeautifulSoup(html_LD, "html.parser")  # bs4 라이브러리 전용 기사 전문 html 가져오기
+
+                LDlist = []  # 호불호 데이터 저장을 위한 리스트
+
+                # -------------------------------------------------------------------
+                LD = bsObject_LD.find_all('em', {"id": "spanSum"})
+                # print(LD)
+
+                # 리스트 LD에 호불호 데이터 저장
+                for i in LD:
+                    LDlist.append(i.text)
+
+                # --------------------------------------------------------------------
+                # 호불호 데이터 csv 로 저장
+                dfAJ_LDList.append([LDlist[0], LDlist[1]])
+
+                # 호불호 데이터가 잘 저장이 되었는지 확인
+                # print(LDlist)
+
+df_AJNews = pd.DataFrame(dfAJNewsList,
+                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+df_AJLD = pd.DataFrame(dfAJ_LDList, columns = ['Likes', 'Dislikes'])
+
+print(df_AJNews)
+print(df_AJLD)
+
+
+for category in DAILIlist:  # 중앙일보 카테고리를 하나씩 대입
+    for j in range(1, 6):
+        html = urlopen("https://www.dailian.co.kr/" + category + "?page=" + str(j))  # 중앙일보에서 해당 카테고리 url
+        bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
+        news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
+        count = 0  # 카테고리 당 가져오는 기사 개수 카운트
+
+        for link in bsObject.find("div", {"class" : "itemContainer"}).find_all('a'):  # 카테고리 별 기사 url 가져오기
+            newsNew = link.get('href')  # 개별 기사 url 저장됨
+            #print(newsNew)
+            if news0 != newsNew:  # 앞서 가져온 기사와 같은지 확인
+                news0 = newsNew  # 다른 기사이므로 news0을 새로운 기사 url로 갱신
+
+                a = Article("https://www.dailian.co.kr" + news0, keep_article_html=True, language='ko')  # newspaper3k 라이브러리 전용 html 로드
+
+                # newspaper3k 라이브러리 전용~~~
+                a.download()
+                a.parse()
+
+                article_html = a.article_html  # 기사 본문 html 코드 (기사 템플릿 html 파일에 넣을 코드?)
+                title = a.title  # 기사 제목
+                author = a.authors  # 기사를 작성한 기자
+                publish_date = a.publish_date  # 기사를 처음 업로드한 시간
+                text = a.text  # 기사 본문 텍스트 정보만 (키워드 분석 전용 데이터)
+
+                # -----------------------------------------------------------------------------
+                # csv 로 데이터 저장
+                dfDAILINewsList.append([title, author, str(publish_date), article_html, text, category, 'dailian'])
+
+                # 데이터가 잘 저장되었는지 확인
+                print(article_html)
+                print('-------------------------------------------------------')
+                print(title)
+                print(author)
+                print(publish_date)
+                print(text)
+
+                # --------------------------------------------------------------
+                # 여기부터 호불호 데이터
+                html_LD = urlopen("https://www.dailian.co.kr" + news0)  # 호불호 데이터 스크래핑을 위한 개별 뉴스 url 로드 (bs4 라이브러리 전용)
+                bsObject_LD = BeautifulSoup(html_LD, "html.parser")  # bs4 라이브러리 전용 기사 전문 html 가져오기
+
+                LDlist = []  # 호불호 데이터 저장을 위한 리스트
+
+                # -------------------------------------------------------------------
+                '''LD = bsObject_LD.find_all('div', {"class": "faceIcon"})
+                #print(LD)
+
+                # 리스트 LD에 호불호 데이터 저장
+                for i in LD:
+                    LDlist.append(i.text)'''
+                LD_like = bsObject_LD.find('span', {"id" : "news_likes"}).text
+                LD_dislike = bsObject_LD.find('span', {"id" : "news_hates"}).text
+                #print([LD_like, LD_dislike])
+                # --------------------------------------------------------------------
+                # 호불호 데이터 csv 로 저장
+                dfDAILI_LDList.append([LD_like, LD_dislike])
+
+                # 호불호 데이터가 잘 저장이 되었는지 확인
+                # print(LDlist)
+
+df_DAILINews = pd.DataFrame(dfDAILINewsList,
+                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+df_DAILILD = pd.DataFrame(dfDAILI_LDList, columns = ['Likes', 'Dislikes'])
+
+print(df_DAILINews)
+print(df_DAILILD)
