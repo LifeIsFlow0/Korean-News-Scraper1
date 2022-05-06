@@ -5,6 +5,12 @@ import requests
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import pandas as pd
+from bs4 import BeautifulSoup
+from selenium import webdriver
+import time
+
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
 # 스크래퍼 클래스
 class Scraper:
@@ -64,26 +70,6 @@ class Scraper:
                     print(text)'''
                     count = count + 1  # 기사 카운트
 
-                    # --------------------------------------------------------------
-                    # 여기부터 댓글 스크래핑
-                    # 중앙일보는 댓글 스크래핑이 막혀서 넘어감
-                    '''
-                    raw = requests.get(news0, headers={'User-Agent': 'Chrome'})
-                    bsObject_comment = BeautifulSoup(raw, "html.parser")
-                    print(bsObject_comment)
-                    count = count + 1
-
-                    commentLink = bsObject_comment.find('div', {"class": "comment_layout"})
-                    print(commentLink)
-                    if commentLink == None:
-                        pass
-                    else:
-                        for commentList in bsObject_comment.find('div', {"class": "comment_layout"}).find_all('div'):
-                            nickname = link.get('span', {"class": "comment_userid"})
-                            commentBody = link.get('span', {"class": "comment_body"})
-                            print(nickname.text())
-                            print(commentBody.text())
-                            '''
 
 
                     # --------------------------------------------------------------
@@ -109,22 +95,137 @@ class Scraper:
                     # 호불호 데이터가 잘 저장이 되었는지 확인
                     # print(LD)
 
+
+
                 if count == 10:  # 뉴스는 10개씩만 test...
                     break
 
-            # print(count)
+            # --------------------------------------------------------------
+            # 여기부터 댓글 스크래핑
+            # 중앙일보는 댓글 스크래핑이 막혀서 넘어감
+
+            driver = webdriver.Chrome()
+            driver.implicitly_wait(2)
+            driver.get(url)
+
+            while True:
+                try:
+                    더보기 = driver.find_element_by_css_selector('a.u_cbox_btn_more')
+                    더보기.click()
+                    time.sleep(1)
+                except:
+                    break
+
+            html = driver.page_source
+            soup = BeautifulSoup(html, 'html.parser')
+            comment = soup.find_all('span', {"class": "u_cbox_contents"})
+
+        # print(count)
         # csv 파일에 데이터 쓰기
         df_news = pd.DataFrame(dfNewsList, columns = ['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+        #df_comment = pd.DataFrame(df)
         df_LD = pd.DataFrame(dfLDList, columns = ['Likes', 'Dislikes'])
         df_news.to_csv('News.csv', encoding = 'utf-8')
         df_LD.to_csv('LikeDislike.csv', encoding = 'utf-8')
 
         # 작업이 완료했는지 확인하기 위함
-        end = 'end'
+        #### 데이터 저장이 잘 되었는지, 데이터 자료값이 맞는지 확인
+        end = 1
         return end
 
 
 # main 함수
-JAlist = ['politics', 'money', 'society', 'world', 'culture', 'sports', 'lifestyle', 'people']  # 중앙일보 카테고리 리스트
+'''JAlist = ['politics', 'money', 'society', 'world', 'culture', 'sports', 'lifestyle', 'people']  # 중앙일보 카테고리 리스트
 scrap = Scraper
-scrap.joongang(JAlist)
+scrap.joongang(JAlist)'''
+
+#동적페이지 추출- request, beautifulsoup
+'''url = "https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=025"
+
+#웹 드라이브
+driver = webdriver.Chrome(ChromeDriverManager().install())
+driver.implicitly_wait(2)
+driver.get(url)
+
+html = driver.page_source
+soup = BeautifulSoup(html, 'html.parser')
+naver_title = soup.find_all('a', {"class": "nclicks(cnt_flashart)"})
+if naver_title == :
+    print(i)'''
+
+#url = "https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=025&date=20220506&page=1"
+
+'''driver = webdriver.Chrome(ChromeDriverManager().install())
+driver.implicitly_wait(2)
+driver.get(url)
+
+while True:
+    try:
+        더보기 = driver.find_element_by_css_selector('a.u_cbox_btn_more')
+        더보기.click()
+        time.sleep(1)
+    except:
+        break
+
+html = driver.page_source
+soup = BeautifulSoup(html, 'html.parser')
+comment = soup.find_all('span', {"class": "u_cbox_contents"})'''
+
+url = "https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=469"
+
+html = urlopen(url)  # 중앙일보에서 해당 카테고리 url
+bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
+
+pagelist = bsObject.find("div", {"class" : "paging"})
+
+links = bsObject.find("ul", {"class": "type13 firstlist"}).find_all('a')
+
+news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
+for link in links:  # 카테고리 별 기사 url 가져오기
+    newsNew = link.select('img')
+    #print(newsNew)
+    for line in newsNew:
+        if news0 != line['alt']:  # 앞서 가져온 기사와 같은지 확인
+            news0 = line['alt']
+            print(news0)
+
+for i in range(1,len(pagelist) + 1):
+
+    url = "https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=469&date=20220506&page=" + str(i)
+
+    html = urlopen(url)  # 중앙일보에서 해당 카테고리 url
+    bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
+
+
+
+    headline_links = bsObject.find("ul", {"class": "type06_headline"}).find_all('a')
+    type_links = bsObject.find("ul", {"class": "type06"}).find_all('a')
+
+    for headline_link, type_link in zip(headline_links, type_links):  # 카테고리 별 기사 url 가져오기
+        newsNew = headline_link.select('img')
+        #print(newsNew)
+        for line in newsNew:
+            if news0 != line['alt']:  # 앞서 가져온 기사와 같은지 확인
+                news0 = line['alt']
+                print(news0)
+        #print('\n\n')
+        newsNew = type_link.select('img')
+        for line in newsNew:
+            if news0 != line['alt']:  # 앞서 가져온 기사와 같은지 확인
+                news0 = line['alt']
+                print(news0)
+    '''driver = webdriver.Chrome(ChromeDriverManager().install())
+    driver.implicitly_wait(2)
+    driver.get(url)'''
+
+
+    '''while True:
+        try:
+            더보기 = driver.find_element_by(By.XPATH, '//*[@id="main_content"]/div[3]/a[2]')
+            더보기.click()
+            time.sleep(1)
+        except:
+            break
+
+    html = driver.page_source
+    bsObject = BeautifulSoup(html, 'html.parser')'''
