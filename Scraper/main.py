@@ -525,13 +525,13 @@ print(df_DAILINews)
 print(df_DAILILD)
 
 #Dataframe 합치기
-df_News = pd.merge(df_JANews, df_AJNews).merge(df_DAILINews)
-df_LD = pd.merge(df_JALD, df_AJLD).merge(df_DAILILD)
+df_News = pd.concat([df_JANews, df_AJNews, df_DAILINews], ignore_index=True)
+df_LD = pd.concat([df_JALD, df_AJLD, df_DAILILD], ignore_index=True)
 
 #합친 Dataframe 확인
 print(df_News)
 print(df_LD)
 
 #Dataframe csv로 저장
-df_News.to_csv('News.csv', mode='w', encoding='utf-8')
-df_LD.to_csv('LikeDislike.csv', mode='w', encoding='utf-8')
+df_News.to_csv('News.csv', encoding='utf-8')
+df_LD.to_csv('LikeDislike.csv', encoding='utf-8')
