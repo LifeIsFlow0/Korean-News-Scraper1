@@ -103,8 +103,8 @@ for url in urls:
     date_value = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
 
     #print(df_News_key[df_News_key['PublishDate'].str.contains(date_value)]['Title'])
-    df_News_title = df_News_key[df_News_key['PublishDate'].str.contains(date_value)]['Title']
-    print(df_News_title)
+    df_News_title = df_News_key[df_News_key['PublishDate'].str.contains(date_value)][['idNews', 'Title']]
+    #print(df_News_title)
 
     for idxNews, Title in df_News_title.iterrows():
         #print(Title)
@@ -139,3 +139,7 @@ for url in urls:
     process += 1
 print(comment_list)
 df_comment = pd.DataFrame(comment_list, columns = ['idNews', 'Likes', 'Dislikes'])
+
+#Dataframe 저장
+df_comment.to_csv('comment.csv', encoding='utf-8')
+df_comment.to_excel('comment.xlsx', encoding='utf-8', sheet_name='comment')

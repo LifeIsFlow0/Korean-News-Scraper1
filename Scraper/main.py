@@ -265,7 +265,7 @@ for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
 
             # -----------------------------------------------------------------------------
             # csv 로 데이터 저장하기 위한 리스트
-            dfJANewsList.append([title, author, str(publish_date), article_html, text, category, 'joongang'])
+            dfJANewsList.append([idNews, title, author, str(publish_date), article_html, text, category, 'joongang'])
 
             # 데이터가 잘 저장되었는지 확인
             '''print(article_html)
@@ -303,7 +303,7 @@ for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
 #---------------------------------------------------------------------------------
 #뉴스, 호불호 Dataframe 만들기
 df_JANews = pd.DataFrame(dfJANewsList,
-                         columns = ['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+                         columns = ['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
 df_JALD = pd.DataFrame(dfJA_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
 
 #df_JANews['PublishDate'] = str(df_JANews['PublishDate'])
@@ -407,7 +407,7 @@ for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
 
                 # -----------------------------------------------------------------------------
                 # csv 로 데이터 저장
-                dfAJNewsList.append([title, author, str(publish_date), article_html, text, category, 'ajunews'])
+                dfAJNewsList.append([idNews, title, author, str(publish_date), article_html, text, category, 'ajunews'])
 
                 # 데이터가 잘 저장되었는지 확인
                 '''print(article_html)
@@ -444,7 +444,7 @@ for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
 #-------------------------------------------------------------------------------------
 #뉴스, 호불호 Dataframe 만들기
 df_AJNews = pd.DataFrame(dfAJNewsList,
-                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+                           columns=['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
 df_AJLD = pd.DataFrame(dfAJ_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
 
 #df_AJNews['PublishDate'] = str(df_AJNews['PublishDate'])
@@ -481,7 +481,7 @@ for category in DAILIlist:  # 데일리안 카테고리를 하나씩 대입
 
                 # -----------------------------------------------------------------------------
                 # csv 로 데이터 저장
-                dfDAILINewsList.append([title, author, str(publish_date), article_html, text, category, 'dailian'])
+                dfDAILINewsList.append([idNews, title, author, str(publish_date), article_html, text, category, 'dailian'])
 
                 # 데이터가 잘 저장되었는지 확인
                 '''print(article_html)
@@ -521,7 +521,7 @@ for category in DAILIlist:  # 데일리안 카테고리를 하나씩 대입
 #-------------------------------------------------------------------------------------
 #뉴스, 호불호 Dataframe 만들기
 df_DAILINews = pd.DataFrame(dfDAILINewsList,
-                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+                           columns=['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
 df_DAILILD = pd.DataFrame(dfDAILI_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
 
 #df_DAILINews['PublishDate'] = str(df_DAILINews['PublishDate'])
@@ -537,7 +537,7 @@ df_LD = pd.concat([df_JALD, df_AJLD, df_DAILILD], ignore_index=True)
 print(df_News)
 print(df_LD)
 
-#Dataframe csv로 저장
+#Dataframe 저장
 df_News.to_csv('News.csv', encoding='utf-8')
 df_News.to_excel('News.xlsx', encoding='utf-8', sheet_name='News')
 
