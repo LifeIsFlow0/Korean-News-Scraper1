@@ -16,10 +16,15 @@ df_News_sort = df_News.sort_values(by=["PublishDate"], ascending=[False])
 #아주경제는 네이버 뉴스에서 지원이 안 됨. 순서대로 중앙일보, 데일리안
 #중앙일보025 + "&date={date}&page={i}"
 #데일리안119 date ex. 20220506
-urls = ['https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=025',
-        'https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=119']
+urls = ['https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=025&listType=title',
+        'https://news.naver.com/main/list.naver?mode=LPOD&mid=sec&oid=119&listType=title']
+
+#네이버 링크 저장
 naver_urls = []
 news0=''
+
+#댓글 Data저장
+comment_list = []
 
 #기사 날짜 데이터 추출
 df_date = df_News['PublishDate']
@@ -34,8 +39,10 @@ date_last = df_date.iloc[last_index][0:4] + df_date.iloc[last_index][5:7] + df_d
 #print(date_last)
 
 #웹 드라이버
-'''driver = webdriver.Chrome(ChromeDriverManager().install())
-driver.implicitly_wait(2)'''
+driver = webdriver.Chrome(ChromeDriverManager().install())
+driver.implicitly_wait(2)
+
+#신문사 리스트
 process = 0
 NB = ['joongang', 'dailian']
 #중앙일보, 데일리안 네이버 뉴스 페이지 방문
@@ -45,26 +52,27 @@ for url in urls:
     for i in range(1, 2):
 
         # visit url
-        #driver.get(urls[key] + f"&date={date}&page=1")
+        driver.get(url + f"&date={date}&page=1")
 
         # 파싱
-        #html = driver.page_source
-        html = urlopen(url + f"&date={date}&page=1")
+        html = driver.page_source
+        #html = urlopen(url + f"&date={date}&page=1")
         soup = BeautifulSoup(html, 'html.parser')
 
-        headline_links = soup.find("ul", {"class": "type06_headline"}).find_all('a')
+        headline_links = soup.find_all("ul", {"class": "type02"})
 
         for headline_link in headline_links:  # 카테고리 별 기사 url 가져오기
+            for line in headline_link.find_all('a'):
+                newsNew = line.text
+                link = line.get('href')  # link 저장
+                # print(newsNew)
 
-            link = headline_link.get('href')  # link 저장
-            newsNew = headline_link.select('img')
-            # print(newsNew)
+                if news0 != newsNew:  # 앞서 가져온 기사와 같은지 확인
+                    news0 = newsNew
 
-            # image 태그에 있는 alt 속성 값 저장(기사 제목)
-            for line in newsNew:
-                if news0 != line['alt']:  # 앞서 가져온 기사와 같은지 확인
-                    news0 = line['alt']
+                    #print(news0, link)
                     naver_urls.append([news0, link])
+
 
             # print('\n\n')
 
@@ -84,20 +92,29 @@ for url in urls:
         except:
             pass
 
+    df_naver = pd.DataFrame(naver_urls, columns=['title', 'url'])
+    #print(df_naver)
     # 저장된 naver 기사 제목과 비교.
     # 맞으면 naver 기사 링크로 들어가서 댓글 더보기 누르기 > 그 다음은 반복
     # 해당 신문사만 dataframe 만들기
-    df_News_key = df_News_sort.iloc[NB[process]]
-
+    df_News_key = df_News_sort[df_News_sort['Newspaper'].str.contains(NB[process])]
+    #print(df_News_key)
     # 날짜 데이터 형태에 맞게 정리
     date_value = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
-    for line in df_News_key[df_News_key['PublishDate'].str.contains(date_value)]:
-        for naver_url in naver_urls:
-            if naver_url[0] == line['Title']:
+
+    #print(df_News_key[df_News_key['PublishDate'].str.contains(date_value)]['Title'])
+    df_News_title = df_News_key[df_News_key['PublishDate'].str.contains(date_value)]['Title']
+    print(df_News_title)
+
+    for idxNews, Title in df_News_title.iterrows():
+        #print(Title)
+        for idxNaver, row in df_naver.iterrows():
+            #print(row)
+            if row[0] == Title:
 
                 driver = webdriver.Chrome(ChromeDriverManager().install())
                 driver.implicitly_wait(2)
-                driver.get(naver_url[1])
+                driver.get(row[1])
 
                 while True:
                     try:
@@ -109,9 +126,16 @@ for url in urls:
 
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
-                comment = soup.find_all('span', {"class": "u_cbox_contents"})
+                comment_nick = soup.find_all('span', {"class": "u_cbox_nick"})
+                comment_text = soup.find_all('span', {"class": "u_cbox_contents"})
 
                 # comment
-                for line in comment:
-                    print(line.string + '\n')
+                for nick, text in zip(comment_nick, comment_text):
+                    #print(nick.string + '\n')
+                    #print(text.string + '\n')
+                    comment_list.append([idxNews, nick, text])
+
+                driver.close()
     process += 1
+print(comment_list)
+df_comment = pd.DataFrame(comment_list, columns = ['idNews', 'Likes', 'Dislikes'])
