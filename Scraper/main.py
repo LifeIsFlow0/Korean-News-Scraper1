@@ -1,5 +1,5 @@
 # newspaper3k, selenium, webdriver, webdriver_manager인가 webdrivermanager, requests, urllib, beautifulsoup4 라이브러리 추가
-
+import openpyxl
 from newspaper import Article
 import requests
 from urllib.request import urlopen
@@ -53,7 +53,7 @@ class Scraper:
                     article_html = a.article_html  # 기사 본문 html 코드 (기사 템플릿 html 파일에 넣을 코드?)
                     title = a.title  # 기사 제목
                     author = a.authors[0]  # 기사를 작성한 기자
-                    publish_date = a.publish_date  # 기사를 처음 업로드한 시간
+                    publish_date = pd.datetime(a.publish_date).date()  # 기사를 처음 업로드한 시간
                     text = a.text  # 기사 본문 텍스트 정보만 (키워드 분석 전용 데이터)
 
                     # -----------------------------------------------------------------------------
@@ -265,7 +265,7 @@ for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
 
             # -----------------------------------------------------------------------------
             # csv 로 데이터 저장하기 위한 리스트
-            dfJANewsList.append([idNews, title, author, publish_date, article_html, text, category, 'joongang'])
+            dfJANewsList.append([title, author, str(publish_date), article_html, text, category, 'joongang'])
 
             # 데이터가 잘 저장되었는지 확인
             '''print(article_html)
@@ -303,8 +303,10 @@ for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
 #---------------------------------------------------------------------------------
 #뉴스, 호불호 Dataframe 만들기
 df_JANews = pd.DataFrame(dfJANewsList,
-                         columns = ['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+                         columns = ['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
 df_JALD = pd.DataFrame(dfJA_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
+
+#df_JANews['PublishDate'] = str(df_JANews['PublishDate'])
 
 #Dataframe 확인
 print(df_JANews)
@@ -379,7 +381,7 @@ print(df_HKNews)
 #print(df_HKLD)'''
 
 for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
-    for j in range(1, 7):
+    for j in range(1, 5):
         html = urlopen("https://www.ajunews.com/" + category + "?page=" + str(j) + "&")  # 아주경제에서 해당 카테고리 url
         bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
         news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
@@ -405,7 +407,7 @@ for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
 
                 # -----------------------------------------------------------------------------
                 # csv 로 데이터 저장
-                dfAJNewsList.append([idNews, title, author, str(publish_date), article_html, text, category, 'ajunews'])
+                dfAJNewsList.append([title, author, str(publish_date), article_html, text, category, 'ajunews'])
 
                 # 데이터가 잘 저장되었는지 확인
                 '''print(article_html)
@@ -442,8 +444,10 @@ for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
 #-------------------------------------------------------------------------------------
 #뉴스, 호불호 Dataframe 만들기
 df_AJNews = pd.DataFrame(dfAJNewsList,
-                           columns=['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
 df_AJLD = pd.DataFrame(dfAJ_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
+
+#df_AJNews['PublishDate'] = str(df_AJNews['PublishDate'])
 
 #Dataframe 상태 확인
 print(df_AJNews)
@@ -451,7 +455,7 @@ print(df_AJLD)
 
 
 for category in DAILIlist:  # 데일리안 카테고리를 하나씩 대입
-    for j in range(1, 6):
+    for j in range(1, 5):
         html = urlopen("https://www.dailian.co.kr/" + category + "?page=" + str(j))  # 데일리안에서 해당 카테고리 url
         bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
         news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
@@ -477,7 +481,7 @@ for category in DAILIlist:  # 데일리안 카테고리를 하나씩 대입
 
                 # -----------------------------------------------------------------------------
                 # csv 로 데이터 저장
-                dfDAILINewsList.append([idNews, title, author, str(publish_date), article_html, text, category, 'dailian'])
+                dfDAILINewsList.append([title, author, str(publish_date), article_html, text, category, 'dailian'])
 
                 # 데이터가 잘 저장되었는지 확인
                 '''print(article_html)
@@ -517,9 +521,10 @@ for category in DAILIlist:  # 데일리안 카테고리를 하나씩 대입
 #-------------------------------------------------------------------------------------
 #뉴스, 호불호 Dataframe 만들기
 df_DAILINews = pd.DataFrame(dfDAILINewsList,
-                           columns=['idNews', 'Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
+                           columns=['Title', 'Author', 'PublishDate', 'BodyHTML', 'Text', 'Category', 'Newspaper'])
 df_DAILILD = pd.DataFrame(dfDAILI_LDList, columns = ['idNews', 'Likes', 'Dislikes'])
 
+#df_DAILINews['PublishDate'] = str(df_DAILINews['PublishDate'])
 #Dataframe 상태 확인
 print(df_DAILINews)
 print(df_DAILILD)
@@ -534,4 +539,10 @@ print(df_LD)
 
 #Dataframe csv로 저장
 df_News.to_csv('News.csv', encoding='utf-8')
+df_News.to_excel('News.xlsx', encoding='utf-8', sheet_name='News')
+
+df_News_sort = df_News.sort_values(by=["PublishDate"], ascending=[False])
+df_News_sort.to_excel('News_sort.xlsx', encoding='utf-8', sheet_name='News_sort')
+
 df_LD.to_csv('LikeDislike.csv', encoding='utf-8')
+df_LD.to_excel('LikeDislike.xlsx', encoding='utf-8', sheet_name='LikeDislike')
