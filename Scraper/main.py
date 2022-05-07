@@ -243,7 +243,6 @@ for category in JAlist:  # 중앙일보 카테고리를 하나씩 대입
     html = urlopen("https://www.joongang.co.kr/" + category)  # 중앙일보에서 해당 카테고리 url
     bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
     news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
-    count = 0  # 카테고리 당 가져오는 기사 개수 카운트
 
     for link in bsObject.find("ul", {"class": "story_list"}).find_all('a'):  # 카테고리 별 기사 url 가져오기
         newsNew = link.get('href')  # 개별 기사 url 저장됨
@@ -385,7 +384,6 @@ for category in AJlist:  # 아주경제 카테고리를 하나씩 대입
         html = urlopen("https://www.ajunews.com/" + category + "?page=" + str(j) + "&")  # 아주경제에서 해당 카테고리 url
         bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
         news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
-        count = 0  # 카테고리 당 가져오는 기사 개수 카운트
 
         for link in bsObject.find("ul", {"class" : "news_list"}).find_all('a'):  # 카테고리 별 기사 url 가져오기
             newsNew = link.get('href')  # 개별 기사 url 저장됨
@@ -459,7 +457,6 @@ for category in DAILIlist:  # 데일리안 카테고리를 하나씩 대입
         html = urlopen("https://www.dailian.co.kr/" + category + "?page=" + str(j))  # 데일리안에서 해당 카테고리 url
         bsObject = BeautifulSoup(html, "html.parser")  # url 화면을 html로 가져오기
         news0 = ''  # 기사 url이 3~4개 반복적으로 나오더라. 기사 당 한 번만 데이터를 긇어오려고 선언함
-        count = 0  # 카테고리 당 가져오는 기사 개수 카운트
 
         for link in bsObject.find("div", {"class" : "itemContainer"}).find_all('a'):  # 카테고리 별 기사 url 가져오기
             newsNew = link.get('href')  # 개별 기사 url 저장됨
@@ -537,12 +534,15 @@ df_LD = pd.concat([df_JALD, df_AJLD, df_DAILILD], ignore_index=True)
 print(df_News)
 print(df_LD)
 
+#날짜순으로 정렬
+df_News = df_News.sort_values(by=["PublishDate"], ascending=[False])
+
+#기사 제목이 중복되는 행 삭제
+df_News = df_News.drop_duplicates(['Title'], keep='first')
+
 #Dataframe 저장
 df_News.to_csv('News.csv', encoding='utf-8')
 df_News.to_excel('News.xlsx', encoding='utf-8', sheet_name='News')
-
-df_News_sort = df_News.sort_values(by=["PublishDate"], ascending=[False])
-df_News_sort.to_excel('News_sort.xlsx', encoding='utf-8', sheet_name='News_sort')
 
 df_LD.to_csv('LikeDislike.csv', encoding='utf-8')
 df_LD.to_excel('LikeDislike.xlsx', encoding='utf-8', sheet_name='LikeDislike')
