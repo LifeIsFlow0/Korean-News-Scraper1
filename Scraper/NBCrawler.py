@@ -20,19 +20,12 @@ for press in presses:
 
     # 파싱
     html = driver.page_source
-
-    # html = urlopen(url + f"&date={date}&page=1")
     soup = BeautifulSoup(html, 'html.parser')
-
-    #subscribe = soup.select('.press_subscribe_badge::after')
 
     #값 가져오기
     subscribe = soup.find("span", {"class" : "press_subscribe_badge"}).find_all("em")
-    #subscribe = soup.find_element_by_xpath('/html/body/div[2]/div/section[1]/header/div[4]/div/div[2]/div[2]/span/em')
 
     #결과 확인
-    #Seoul_subscribe = subscribe[1].text
-    #print(subscribe)
     subscribe = subscribe[0].string
     print(subscribe)
 
